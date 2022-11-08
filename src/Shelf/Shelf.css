@@ -1,0 +1,9 @@
+.name {
+    text-align: start;
+    padding-left: 30px;
+}
+
+.books {
+    display: flex;
+    justify-content: center;
+  }
