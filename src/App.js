@@ -11,6 +11,7 @@ function App() {
 
   const [books, setBooks] = useState([]);
   const [filtredBooks, setFiltredBooks] = useState([]);
+  const [selectedBook, setSelectedBook] = useState('');
 
   const shelfs = [
     {
@@ -53,6 +54,20 @@ function App() {
     setFiltredBooks(books);
   }
 
+  const drag = (book) => {
+    setSelectedBook(book);
+  }
+
+  const drop = (shelf) => {
+    moveBook(shelf, selectedBook);
+  }
+
+  const allowDrop = (e) => {
+    let event = e;
+    event.stopPropagation();
+    event.preventDefault();
+  }
+
   useEffect(() => {
     bookAPI();
   }, []);
@@ -73,14 +88,24 @@ function App() {
                   <button className="search-button" onClick={() => navigate("/search")}>🔍</button>
                   {
                     shelfs.map((shelf) => (
-                    <div>
-                      <Self key={shelf.key} shelf={shelf.name}>
+                    <div onDrop={() => drop(shelf.key)}
+                         id={shelf.key}
+                         key={shelf.key} 
+                         onDragOver={event => allowDrop(event)}>
+                      <Self key={shelf.key} 
+                            shelf={shelf.name}>
                         {books.filter((book) => book.shelf === shelf.key).map((book) => (
-                          <Books key={book.id} onMoveBook={
-                            (shelf) => {
-                              moveBook(shelf, book)
-                            }} book={book}>
-                          </Books>
+                          <div  draggable="true"
+                                id={book.id}
+                                key={book.id}
+                                onDragStart={event => drag(book)}>
+                            <Books book={book}
+                                   onMoveBook={
+                                    (shelf) => {
+                                      moveBook(shelf, book)
+                                    }}>
+                            </Books>
+                          </div>
                         ))}
                       </Self>
                     </div>))
