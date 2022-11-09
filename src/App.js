@@ -5,6 +5,7 @@ import * as BooksAPI from './BooksAPI';
 import Self from './Shelf/Shelf';
 import Books from './Book/Books';
 import Search from './Search/Search';
+import BookDetails from './BookDetails/BookDetails'
 
 function App() {
   const navigate = useNavigate();
@@ -98,6 +99,7 @@ function App() {
                           <div  draggable="true"
                                 id={book.id}
                                 key={book.id}
+                                onClick={() => navigate("/book/"+book.id)}
                                 onDragStart={event => drag(book)}>
                             <Books book={book}
                                    onMoveBook={
@@ -120,15 +122,24 @@ function App() {
                 <Search onFilter={searchBook} 
                         onReturn={() => navigate("/")}>
                   {filtredBooks.map((book) => (
-                    <Books key={book.id} onMoveBook={
-                      (shelf) => {
-                        moveBook(shelf, book)
-                      }} book={book}>
-                    </Books>
+                    <div key={book.id}
+                         onClick={() => navigate("/book/"+book.id)}>
+                      <Books  onMoveBook={
+                        (shelf) => {
+                          moveBook(shelf, book)
+                        }} book={book}>
+                      </Books>
+                    </div>
+
                   ))}
                 </Search>
               }
             />
+            <Route exact
+                   path="/book/:id"
+                   element={
+                    <BookDetails></BookDetails>
+                   }/>
           </Routes>
       }
     </div>
