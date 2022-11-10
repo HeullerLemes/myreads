@@ -12,6 +12,7 @@ function App() {
 
   const [books, setBooks] = useState([]);
   const [filtredBooks, setFiltredBooks] = useState([]);
+  const [searchTerm, setSearchTerm] = useState([]);
   const [selectedBook, setSelectedBook] = useState('');
 
   const shelfs = [
@@ -29,30 +30,59 @@ function App() {
     }
   ];
 
-  const filterBooks = (searchTerm) => {
-    console.log(searchTerm, books);
-    const filtered = books.filter((book) => book.title.toUpperCase().includes(searchTerm.toUpperCase()) );
-    console.log(filtered);
-    setFiltredBooks(filtered);
+  const setBookShelf = (resBooks) => {
+    let resFilteredBooks = [];
+    for(let resBook of resBooks) {
+      const book = books.find((book) => book.id === resBook.id);
+      if(book){
+        resBook.shelf = book.shelf;
+      }
+      resFilteredBooks.push(resBook);
+    }
+    return resFilteredBooks;
   }
 
-  const searchBook = (searchTerm) => {
-    if(searchTerm) {
-      filterBooks(searchTerm) 
+  const breakSearchTerms = (newSearchTerm) => {
+    return newSearchTerm
+    .split(" ")
+    .filter((term) => term !== '');
+
+  }
+
+  const getSearchedBooks = async (terms) => {
+    let resBooks;
+    let resFilteredBooks = [];
+    for(let term of terms) {
+      resBooks = await BooksAPI.search(term, 10);
+      if(resBooks instanceof Array) {
+        resFilteredBooks.push(...resBooks);
+      }
+    }
+    return resFilteredBooks;
+  }
+
+  const searchBook = async (newSearchTerm) => {
+    if(newSearchTerm !== '') {
+      const terms = breakSearchTerms(newSearchTerm);
+      let resBooks = await getSearchedBooks(terms);
+      resBooks = setBookShelf(resBooks);
+      setFiltredBooks(resBooks);
+      setSearchTerm(newSearchTerm);
     } else {
-      setFiltredBooks(books);
+      setFiltredBooks([]);
+      setSearchTerm('');
     }
   }
 
   const moveBook = async (shelf, book) => {
     await BooksAPI.update(book, shelf);
-    bookAPI();
+    getAllBooks();
+    searchBook(searchTerm);
   }
 
-  async function bookAPI() {
+  async function getAllBooks() {
     const books = await BooksAPI.getAll();
     setBooks(books);
-    setFiltredBooks(books);
   }
 
   const drag = (book) => {
@@ -69,8 +99,13 @@ function App() {
     event.preventDefault();
   }
 
+  const navigateToSearch = () => {
+    navigate("/search");
+    setFiltredBooks([]);
+  }
+
   useEffect(() => {
-    bookAPI();
+    getAllBooks();
   }, []);
 
   return (
@@ -86,7 +121,7 @@ function App() {
               element=
               {
                 <div className="shelfs-container">
-                  <button className="search-button" onClick={() => navigate("/search")}>🔍</button>
+                  <button className="search-button" onClick={() => navigateToSearch()}>🔍</button>
                   {
                     shelfs.map((shelf) => (
                     <div onDrop={() => drop(shelf.key)}
@@ -124,7 +159,7 @@ function App() {
                   {filtredBooks.map((book) => (
                     <div key={book.id}
                          onClick={() => navigate("/book/"+book.id)}>
-                      <Books  onMoveBook={
+                      <Books onMoveBook={
                         (shelf) => {
                           moveBook(shelf, book)
                         }} book={book}>
